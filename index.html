@@ -69,47 +69,46 @@
             signaturePad.clear();
         }
 
-        async function prosesTTD() {
-    if (signaturePad.isEmpty()) {
-        alert("Silakan tanda tangan terlebih dahulu!");
-        return;
-    }
+ async function prosesTTD() {
+            if (signaturePad.isEmpty()) {
+                alert("Silakan tanda tangan terlebih dahulu!");
+                return;
+            }
 
-    const btnSubmit = document.getElementById('btnSubmit');
-    btnSubmit.innerText = "Mengupload ke Drive...";
-    btnSubmit.disabled = true;
+            const btnSubmit = document.getElementById('btnSubmit');
+            btnSubmit.innerText = "Mengupload ke Drive...";
+            btnSubmit.disabled = true;
 
-    try {
-        const dataURI = signaturePad.toDataURL("image/png");
-        const base64Data = dataURI.split(',')[1];
+            try {
+                const dataURI = signaturePad.toDataURL("image/png");
+                const base64Data = dataURI.split(',')[1];
 
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxPGEIkRjIMPULxCkg7nx-kF1BF4oZU1u6_-4-u7QYFaraHHNC565LGLdsqCMk4WQgX/exec'; 
+                // GANTI DENGAN URL DEPLOYMENT BARU ANDA
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbx4_HuqfRMlXwkyytoNy282gEcfpgAlaXH7cIzFCODKd34p-rhavw5ZqlUg0jdLFAQ/exec'; 
 
-        // 1. Kirim data tanpa menunggu jawaban (Blind Upload)
-       // 1. Kirim data dan tunggu jawaban
-        await fetch(scriptURL, {
-            method: 'POST',
-            // mode: 'no-cors', // <-- HAPUS ATAU KOMENTARI BARIS INI
-            headers: { 
-                // Gunakan text/plain agar tidak memicu preflight (CORS block)
-                'Content-Type': 'text/plain;charset=utf-8' 
-            },
-            body: JSON.stringify({ image: base64Data })
-        });
+                // Kirim data menggunakan mode POST standard dengan body plain text
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    // Hapus mode: 'no-cors' agar kita tahu jika sukses/gagal
+                    headers: { 
+                        'Content-Type': 'text/plain;charset=utf-8' 
+                    },
+                    body: JSON.stringify({ image: base64Data })
+                });
 
-        // 2. Beri jeda 3 detik agar Google sempat memproses file
-        // Lalu langsung lempar ke Google Form
-        setTimeout(() => {
-            const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
-            window.location.href = linkGoogleForm + encodeURIComponent("File Tersimpan di Google Drive");
-        }, 3000);
+                // Tunggu sebentar lalu arahkan ke form
+                setTimeout(() => {
+                    const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
+                    window.location.href = linkGoogleForm + encodeURIComponent("File Tersimpan di Google Drive");
+                }, 3000);
 
-    } catch (error) {
-        alert("Terjadi gangguan jaringan, silakan coba lagi.");
-        btnSubmit.innerText = "Lanjut ke Form";
-        btnSubmit.disabled = false;
-    }
-}
+            } catch (error) {
+                console.error("Error Detail:", error); // Munculkan error di console (Inspect Element)
+                alert("Gagal mengupload. Pastikan pengaturan Who Has Access adalah 'Anyone'.");
+                btnSubmit.innerText = "Lanjut ke Form";
+                btnSubmit.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
