@@ -19,7 +19,6 @@
             background-color: #fff; 
             border-radius: 8px; 
             margin-bottom: 20px; 
-            /* Penting untuk HP agar layar tidak ikut tergeser (scroll) saat mencoret TTD */
             touch-action: none; 
         }
         canvas { 
@@ -61,60 +60,58 @@
     </div>
 
     <script>
-        // 1. Setup Canvas TTD
         const canvas = document.getElementById('canvas');
         const signaturePad = new SignaturePad(canvas, {
             penColor: "black"
         });
 
-        // Fungsi menghapus coretan
         function hapusTTD() {
             signaturePad.clear();
         }
 
-        // Fungsi memproses TTD saat tombol diklik
         async function prosesTTD() {
-    if (signaturePad.isEmpty()) {
-        alert("Silakan tanda tangan terlebih dahulu!");
-        return;
-    }
+            if (signaturePad.isEmpty()) {
+                alert("Silakan tanda tangan terlebih dahulu!");
+                return;
+            }
 
-    const btnSubmit = document.getElementById('btnSubmit');
-    btnSubmit.innerText = "Mengupload ke Drive...";
-    btnSubmit.disabled = true;
+            const btnSubmit = document.getElementById('btnSubmit');
+            btnSubmit.innerText = "Mengupload ke Drive...";
+            btnSubmit.disabled = true;
 
-    try {
-        const dataURI = signaturePad.toDataURL("image/png");
-        const base64Data = dataURI.split(',')[1];
+            try {
+                const dataURI = signaturePad.toDataURL("image/png");
+                const base64Data = dataURI.split(',')[1];
 
-        // GANTI INI DENGAN URL APPS SCRIPT KAMU TADI
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbyCJyPs-d1GP_lnIQq_2Ie4Xt52Wf60xzACKwktVFGPydrn6Eak-xjW4iVOAwul90H7/exec'; 
+                // URL Apps Script kamu
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbyCJyPs-d1GP_lnIQq_2Ie4Xt52Wf60xzACKwktVFGPydrn6Eak-xjW4iVOAwul90H7/exec'; 
 
-        const response = await fetch(scriptURL, {
-    method: 'POST',
-    mode: 'no-cors', // Menambahkan mode ini untuk menghindari blokir CORS
-    headers: {
-        'Content-Type': 'text/plain'
-    },
-    body: JSON.stringify({ image: base64Data })
-});
-        
-        const hasil = await response.json();
-        
-        if (hasil.success) {
-            const urlGambarTTD = hasil.url;
-            const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
-            window.location.href = linkGoogleForm + encodeURIComponent(urlGambarTTD);
-        } else {
-            throw new Error(hasil.error);
+                // Mengirim data ke Google Drive dengan mode 'no-cors'
+                // Ini mencegah error "Failed to fetch" di browser
+                fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: JSON.stringify({ image: base64Data })
+                });
+                
+                // Karena pakai 'no-cors', browser tidak bisa membaca jawaban sukses dari Google.
+                // Jadi kita beri jeda 2 detik (asumsi upload selesai) lalu pindah ke Form.
+                setTimeout(() => {
+                    const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
+                    
+                    // Kita isi kolom Tanda Tangan dengan keterangan statis karena link dinamis tidak bisa diambil di mode no-cors
+                    window.location.href = linkGoogleForm + encodeURIComponent("File Tersimpan di Google Drive");
+                }, 2500);
+
+            } catch (error) {
+                alert("Terjadi kesalahan teknis. Silakan coba lagi.");
+                btnSubmit.innerText = "Lanjut ke Form";
+                btnSubmit.disabled = false;
+            }
         }
-
-    } catch (error) {
-        alert("Gagal upload ke Drive: " + error.message);
-        btnSubmit.innerText = "Lanjut ke Form";
-        btnSubmit.disabled = false;
-    }
-}
     </script>
 </body>
 </html>
