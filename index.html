@@ -86,7 +86,7 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyCJyPs-d1GP_lnIQq_2Ie4Xt52Wf60xzACKwktVFGPydrn6Eak-xjW4iVOAwul90H7/exec'; 
 
         // 1. Kirim data tanpa menunggu jawaban (Blind Upload)
-        fetch(scriptURL, {
+        await fetch(scriptURL, {
             method: 'POST',
             mode: 'no-cors', 
             headers: { 'Content-Type': 'text/plain' },
