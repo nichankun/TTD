@@ -70,48 +70,42 @@
         }
 
         async function prosesTTD() {
-            if (signaturePad.isEmpty()) {
-                alert("Silakan tanda tangan terlebih dahulu!");
-                return;
-            }
+    if (signaturePad.isEmpty()) {
+        alert("Silakan tanda tangan terlebih dahulu!");
+        return;
+    }
 
-            const btnSubmit = document.getElementById('btnSubmit');
-            btnSubmit.innerText = "Mengupload ke Drive...";
-            btnSubmit.disabled = true;
+    const btnSubmit = document.getElementById('btnSubmit');
+    btnSubmit.innerText = "Mengupload ke Drive...";
+    btnSubmit.disabled = true;
 
-            try {
-                const dataURI = signaturePad.toDataURL("image/png");
-                const base64Data = dataURI.split(',')[1];
+    try {
+        const dataURI = signaturePad.toDataURL("image/png");
+        const base64Data = dataURI.split(',')[1];
 
-                // URL Apps Script kamu
-                const scriptURL = 'https://script.google.com/macros/s/AKfycbyCJyPs-d1GP_lnIQq_2Ie4Xt52Wf60xzACKwktVFGPydrn6Eak-xjW4iVOAwul90H7/exec'; 
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyCJyPs-d1GP_lnIQq_2Ie4Xt52Wf60xzACKwktVFGPydrn6Eak-xjW4iVOAwul90H7/exec'; 
 
-                // Mengirim data ke Google Drive dengan mode 'no-cors'
-                // Ini mencegah error "Failed to fetch" di browser
-                fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    },
-                    body: JSON.stringify({ image: base64Data })
-                });
-                
-                // Karena pakai 'no-cors', browser tidak bisa membaca jawaban sukses dari Google.
-                // Jadi kita beri jeda 2 detik (asumsi upload selesai) lalu pindah ke Form.
-                setTimeout(() => {
-                    const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
-                    
-                    // Kita isi kolom Tanda Tangan dengan keterangan statis karena link dinamis tidak bisa diambil di mode no-cors
-                    window.location.href = linkGoogleForm + encodeURIComponent("File Tersimpan di Google Drive");
-                }, 2500);
+        // 1. Kirim data tanpa menunggu jawaban (Blind Upload)
+        fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ image: base64Data })
+        });
 
-            } catch (error) {
-                alert("Terjadi kesalahan teknis. Silakan coba lagi.");
-                btnSubmit.innerText = "Lanjut ke Form";
-                btnSubmit.disabled = false;
-            }
-        }
+        // 2. Beri jeda 3 detik agar Google sempat memproses file
+        // Lalu langsung lempar ke Google Form
+        setTimeout(() => {
+            const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
+            window.location.href = linkGoogleForm + encodeURIComponent("File Tersimpan di Google Drive");
+        }, 3000);
+
+    } catch (error) {
+        alert("Terjadi gangguan jaringan, silakan coba lagi.");
+        btnSubmit.innerText = "Lanjut ke Form";
+        btnSubmit.disabled = false;
+    }
+}
     </script>
 </body>
 </html>
