@@ -69,7 +69,7 @@
             signaturePad.clear();
         }
 
- async function prosesTTD() {
+        async function prosesTTD() {
             if (signaturePad.isEmpty()) {
                 alert("Silakan tanda tangan terlebih dahulu!");
                 return;
@@ -83,28 +83,27 @@
                 const dataURI = signaturePad.toDataURL("image/png");
                 const base64Data = dataURI.split(',')[1];
 
-                // GANTI DENGAN URL DEPLOYMENT BARU ANDA
                 const scriptURL = 'https://script.google.com/macros/s/AKfycbx4_HuqfRMlXwkyytoNy282gEcfpgAlaXH7cIzFCODKd34p-rhavw5ZqlUg0jdLFAQ/exec'; 
 
-                // Kirim data menggunakan mode POST standard dengan body plain text
+                // Kirim data menggunakan mode no-cors untuk bypass blokiran browser
                 await fetch(scriptURL, {
                     method: 'POST',
-                    // Hapus mode: 'no-cors' agar kita tahu jika sukses/gagal
+                    mode: 'no-cors', // <--- INI BAGIAN YANG SAYA TAMBAHKAN KEMBALI
                     headers: { 
-                        'Content-Type': 'text/plain;charset=utf-8' 
+                        'Content-Type': 'text/plain' 
                     },
                     body: JSON.stringify({ image: base64Data })
                 });
 
-                // Tunggu sebentar lalu arahkan ke form
+                // Tunggu 3 detik agar Google Drive selesai memproses gambar, lalu pindah halaman
                 setTimeout(() => {
                     const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
                     window.location.href = linkGoogleForm + encodeURIComponent("File Tersimpan di Google Drive");
                 }, 3000);
 
             } catch (error) {
-                console.error("Error Detail:", error); // Munculkan error di console (Inspect Element)
-                alert("Gagal mengupload. Pastikan pengaturan Who Has Access adalah 'Anyone'.");
+                console.error("Error Detail:", error);
+                alert("Gagal mengupload. Pastikan internet Anda stabil.");
                 btnSubmit.innerText = "Lanjut ke Form";
                 btnSubmit.disabled = false;
             }
