@@ -86,10 +86,14 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxPGEIkRjIMPULxCkg7nx-kF1BF4oZU1u6_-4-u7QYFaraHHNC565LGLdsqCMk4WQgX/exec'; 
 
         // 1. Kirim data tanpa menunggu jawaban (Blind Upload)
+       // 1. Kirim data dan tunggu jawaban
         await fetch(scriptURL, {
             method: 'POST',
-            mode: 'no-cors', 
-            headers: { 'Content-Type': 'text/plain' },
+            // mode: 'no-cors', // <-- HAPUS ATAU KOMENTARI BARIS INI
+            headers: { 
+                // Gunakan text/plain agar tidak memicu preflight (CORS block)
+                'Content-Type': 'text/plain;charset=utf-8' 
+            },
             body: JSON.stringify({ image: base64Data })
         });
 
