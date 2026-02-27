@@ -91,9 +91,13 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyCJyPs-d1GP_lnIQq_2Ie4Xt52Wf60xzACKwktVFGPydrn6Eak-xjW4iVOAwul90H7/exec'; 
 
         const response = await fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify({ image: base64Data })
-        });
+    method: 'POST',
+    mode: 'no-cors', // Menambahkan mode ini untuk menghindari blokir CORS
+    headers: {
+        'Content-Type': 'text/plain'
+    },
+    body: JSON.stringify({ image: base64Data })
+});
         
         const hasil = await response.json();
         
