@@ -74,56 +74,43 @@
 
         // Fungsi memproses TTD saat tombol diklik
         async function prosesTTD() {
-            if (signaturePad.isEmpty()) {
-                alert("Silakan tanda tangan terlebih dahulu!");
-                return;
-            }
+    if (signaturePad.isEmpty()) {
+        alert("Silakan tanda tangan terlebih dahulu!");
+        return;
+    }
 
-            // Ubah teks tombol agar pengguna tahu sistem sedang memproses
-            const btnSubmit = document.getElementById('btnSubmit');
-            btnSubmit.innerText = "Memproses...";
-            btnSubmit.disabled = true;
+    const btnSubmit = document.getElementById('btnSubmit');
+    btnSubmit.innerText = "Mengupload ke Drive...";
+    btnSubmit.disabled = true;
 
-            try {
-                // 2. Ambil gambar dari canvas dan buang kode depan base64-nya
-                const dataURI = signaturePad.toDataURL("image/png");
-                const base64Data = dataURI.split(',')[1];
+    try {
+        const dataURI = signaturePad.toDataURL("image/png");
+        const base64Data = dataURI.split(',')[1];
 
-                // 3. Persiapkan Upload ke ImgBB
-                const apiKeyImgBB = '41d2837eb338261290d78f740e3e991a'; // <--- GANTI BAGIAN INI
-                const formData = new FormData();
-                formData.append('image', base64Data);
+        // GANTI INI DENGAN URL APPS SCRIPT KAMU TADI
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyCJyPs-d1GP_lnIQq_2Ie4Xt52Wf60xzACKwktVFGPydrn6Eak-xjW4iVOAwul90H7/exec'; 
 
-                // Eksekusi Upload
-                const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKeyImgBB}`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const hasil = await response.json();
-                
-                // Jika upload berhasil
-                if (hasil.success) {
-                    const urlGambarTTD = hasil.data.url;
-
-                    // 4. Siapkan Link Pre-filled Google Form
-                    // <--- GANTI LINK DI BAWAH SESUAI LINK PRE-FILLED GOOGLE FORM KAMU
-                    // Pastikan link berakhiran sama persis sebelum tanda sama dengan (=)
-                    const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
-                    
-                    // Lempar pengguna ke Google Form beserta URL gambarnya
-                    window.location.href = linkGoogleForm + encodeURIComponent(urlGambarTTD);
-                } else {
-                    alert("Gagal mengupload tanda tangan. Coba lagi.");
-                    btnSubmit.innerText = "Lanjut ke Form";
-                    btnSubmit.disabled = false;
-                }
-
-            } catch (error) {
-                alert("Terjadi kesalahan jaringan.");
-                btnSubmit.innerText = "Lanjut ke Form";
-                btnSubmit.disabled = false;
-            }
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ image: base64Data })
+        });
+        
+        const hasil = await response.json();
+        
+        if (hasil.success) {
+            const urlGambarTTD = hasil.url;
+            const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
+            window.location.href = linkGoogleForm + encodeURIComponent(urlGambarTTD);
+        } else {
+            throw new Error(hasil.error);
         }
+
+    } catch (error) {
+        alert("Gagal upload ke Drive: " + error.message);
+        btnSubmit.innerText = "Lanjut ke Form";
+        btnSubmit.disabled = false;
+    }
+}
     </script>
 </body>
 </html>
