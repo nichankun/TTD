@@ -66,35 +66,33 @@
         submitBtn.disabled = true;
         submitBtn.innerText = "Mengirim...";
 
-        // 1. Ambil data TTD dalam format Base64
         const ttdData = signaturePad.toDataURL("image/png");
 
-        // 2. URL Google Form (Ujungnya harus /formResponse)
+        // 1. URL TUJUAN (Pastikan /formResponse)
         const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/formResponse";
 
-        // 3. Siapkan parameter Pre-filled (entry ID)
+        // 2. ENTRY ID (entry.2010947988)
         const formData = new URLSearchParams();
         formData.append("entry.2010947988", ttdData); 
 
-       try {
-            await fetch(webAppUrl, {
+        try {
+            // PERBAIKAN: Menggunakan googleFormUrl, bukan webAppUrl
+            await fetch(googleFormUrl, {
                 method: "POST",
                 body: formData,
                 mode: "no-cors" 
             });
 
-            // TAMPILKAN PESAN DULU
             alert("Berhasil! Mengalihkan halaman...");
 
-            // PINDAH KE HALAMAN LAIN (Contoh: Google Form Anda)
+            // PINDAH KE HALAMAN LAIN
             window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewanalytics"; 
-            
-            // Atau pindah ke halaman terima kasih buatan sendiri:
-            // window.location.href = "terimakasih.html";
 
         } catch (err) {
             alert("Gagal kirim data.");
             console.error(err);
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Kirim ke Google Form";
         }
     };
 
