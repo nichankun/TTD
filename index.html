@@ -73,7 +73,7 @@
         const namaUser = document.getElementById("nama").value; // Ambil nama dari input
         
         // URL Web App hasil Deploy Apps Script Anda
-        const webAppUrl = "URL_WEB_APP_ANDA_DI_SINI"; 
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbyUD6ylqQjLg6bqxtSWdX6JVAKu5ql6FhrwcCioi1Y8MF4oWV7Jf9KEEaC10q2yk1WG/exec"; 
 
         const formData = new URLSearchParams();
         // NAMA KEY HARUS SAMA DENGAN e.parameter DI APPS SCRIPT
@@ -86,6 +86,9 @@
                 body: formData,
                 mode: "no-cors" 
             });
+
+
+            
 
             alert("Berhasil! Tanda tangan tersimpan di Drive & Spreadsheet.");
             signaturePad.clear();
