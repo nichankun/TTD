@@ -3,123 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tanda Tangan Formulir</title>
+    <title>Tanda Tangan Digital - Bapenda</title>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <style>
-        body { 
-            font-family: sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 20px; 
-            background-color: #f4f4f9; 
-        }
-        .canvas-container { 
-            border: 2px dashed #ccc; 
-            background-color: #fff; 
-            border-radius: 8px; 
-            margin-bottom: 20px; 
-            touch-action: none; 
-        }
-        canvas { 
-            width: 100%; 
-            max-width: 400px; 
-            height: 200px; 
-        }
-        .btn-group { 
-            display: flex; 
-            gap: 10px; 
-        }
-        button { 
-            padding: 10px 20px; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 14px;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #f0f2f5; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 450px; width: 100%; text-align: center; }
+        h2 { color: #1890ff; margin-top: 0; }
+        .canvas-container { border: 2px solid #d9d9d9; background-color: #fafafa; border-radius: 8px; margin: 20px 0; touch-action: none; position: relative; }
+        canvas { width: 100%; height: 200px; cursor: crosshair; }
+        .btn-group { display: flex; gap: 12px; justify-content: center; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
         .btn-clear { background-color: #ff4d4f; color: white; }
-        .btn-submit { background-color: #1890ff; color: white; }
-        .btn-submit:disabled { background-color: #91caff; cursor: not-allowed; }
+        .btn-clear:hover { background-color: #d9363e; }
+        .btn-submit { background-color: #1890ff; color: white; flex-grow: 1; }
+        .btn-submit:hover { background-color: #096dd9; }
+        .btn-submit:disabled { background-color: #bfbfbf; cursor: not-allowed; }
+        #status { margin-top: 15px; font-size: 13px; color: #666; }
     </style>
 </head>
 <body>
 
-    <h2>Tanda Tangan Di Sini</h2>
-    <p style="text-align: center; font-size: 14px; color: #666;">
-        Silakan buat tanda tangan Anda di dalam kotak, lalu klik "Lanjut ke Form".
-    </p>
+    <div class="card">
+        <h2>Tanda Tangan</h2>
+        <p>Silakan bubuhkan tanda tangan Anda di bawah ini, lalu klik tombol kirim.</p>
 
-    <div class="canvas-container">
-        <canvas id="canvas" width="400" height="200"></canvas>
-    </div>
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
 
-    <div class="btn-group">
-        <button class="btn-clear" onclick="hapusTTD()">Ulangi</button>
-        <button class="btn-submit" id="btnSubmit" onclick="prosesTTD()">Lanjut ke Form</button>
+        <div class="btn-group">
+            <button class="btn-clear" onclick="hapusTTD()">Ulangi</button>
+            <button class="btn-submit" id="btnSubmit" onclick="prosesTTD()">Lanjut ke Form</button>
+        </div>
+        
+        <div id="status"></div>
     </div>
 
     <script>
         const canvas = document.getElementById('canvas');
+        const statusDiv = document.getElementById('status');
+        const btnSubmit = document.getElementById('btnSubmit');
+        
+        // Inisialisasi Signature Pad
         const signaturePad = new SignaturePad(canvas, {
-            penColor: "black"
+            penColor: "black",
+            backgroundColor: "rgba(255, 255, 255, 0)"
         });
+
+        // Menangani ukuran canvas agar responsif
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            signaturePad.clear();
+        }
+        window.onresize = resizeCanvas;
+        resizeCanvas();
 
         function hapusTTD() {
             signaturePad.clear();
+            statusDiv.innerText = "";
         }
 
         async function prosesTTD() {
             if (signaturePad.isEmpty()) {
-                alert("Silakan tanda tangan terlebih dahulu!");
+                alert("Tanda tangan tidak boleh kosong!");
                 return;
             }
 
-            const btnSubmit = document.getElementById('btnSubmit');
-            btnSubmit.innerText = "Mengupload...";
             btnSubmit.disabled = true;
+            btnSubmit.innerText = "Mengirim...";
+            statusDiv.innerText = "Sedang mengupload file ke Google Drive...";
 
             try {
                 const dataURI = signaturePad.toDataURL("image/png");
                 const base64Data = dataURI.split(',')[1];
                 
-                // URL Web App kamu
-                const scriptURL = 'https://script.google.com/macros/s/AKfycbxrMkHyJVBK_UN9QF_Xub7MvJ5BCcveyVh_rb6GSWcmiOWmRV8e5mlYi2NS3KexXsNW/exec';
+                // URL Web App Anda
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbwmYufE84dZyA2M4UhcHk_hSWGmb1mDdlbg56sqcZWr-5iie8VxomfdwwxsXAxOj1eS/exec';
 
-                // Gunakan cara fetch yang lebih stabil untuk Google Script
+                // Trik Bypass CORS: Mengirim sebagai text/plain
                 const response = await fetch(scriptURL, {
                     method: 'POST',
-                    mode: 'cors', // Harus cors untuk ambil URL
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8', // Trik agar tidak kena pre-flight CORS
-                    },
+                    mode: 'cors', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ image: base64Data })
                 });
 
-                // Cek apakah responnya OK
                 const result = await response.json();
 
                 if (result.success) {
-                    btnSubmit.innerText = "Mengalihkan...";
+                    statusDiv.style.color = "green";
+                    statusDiv.innerText = "Berhasil! Mengalihkan ke Form...";
                     
                     // URL Google Form Anda
                     const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
                     
-                    // Alihkan ke form dengan membawa link file dari Drive
+                    // Alihkan dengan membawa URL file Drive
                     window.location.href = linkGoogleForm + encodeURIComponent(result.url);
                 } else {
-                    throw new Error(result.error || "Gagal menyimpan file.");
+                    throw new Error(result.error);
                 }
 
             } catch (error) {
-                console.error("Error Detail:", error);
-                
-                // JIKA ERROR JSON TAPI FILE MASUK DRIVE (Khas Google Redirect)
-                // Kita beri pesan instruksi atau coba tebak linknya jika perlu.
-                alert("Upload berhasil (cek Drive), tapi browser memblokir pengalihan otomatis. Silakan refresh atau coba lagi.");
-                
-                btnSubmit.innerText = "Lanjut ke Form";
+                console.error("Detail Error:", error);
+                statusDiv.style.color = "red";
+                statusDiv.innerText = "Gagal: " + error.message;
                 btnSubmit.disabled = false;
+                btnSubmit.innerText = "Coba Lagi";
+                
+                // Jika file masuk Drive tapi tetap error di browser, beri tombol manual
+                if(confirm("Upload mungkin berhasil namun koneksi terputus. Coba alihkan ke Form secara manual?")) {
+                    window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform";
+                }
             }
         }
     </script>
