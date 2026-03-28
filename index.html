@@ -76,22 +76,25 @@
         const formData = new URLSearchParams();
         formData.append("entry.2010947988", ttdData); 
 
-        try {
-            // Mengirim langsung ke Google Form
-            await fetch(googleFormUrl, {
+       try {
+            await fetch(webAppUrl, {
                 method: "POST",
                 body: formData,
-                mode: "no-cors" // Wajib untuk Google Form
+                mode: "no-cors" 
             });
 
-            alert("Terkirim! Silakan cek tab 'Responses' di Google Form Anda.");
-            signaturePad.clear();
+            // TAMPILKAN PESAN DULU
+            alert("Berhasil! Mengalihkan halaman...");
+
+            // PINDAH KE HALAMAN LAIN (Contoh: Google Form Anda)
+            window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewanalytics"; 
+            
+            // Atau pindah ke halaman terima kasih buatan sendiri:
+            // window.location.href = "terimakasih.html";
+
         } catch (err) {
-            alert("Gagal mengirim ke Google Form.");
+            alert("Gagal kirim data.");
             console.error(err);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Kirim ke Google Form";
         }
     };
 
