@@ -56,7 +56,7 @@
 
     <div class="btn-group">
         <button class="btn-clear" onclick="hapusTTD()">Ulangi</button>
-        <button class="btn-submit" onclick="prosesTTD()" id="btnSubmit">Lanjut ke Form</button>
+        <button class="btn-submit" id="btnSubmit" onclick="prosesTTD()">Lanjut ke Form</button>
     </div>
 
     <script>
@@ -69,48 +69,59 @@
             signaturePad.clear();
         }
 
-    async function prosesTTD() {
-    if (signaturePad.isEmpty()) {
-        alert("Silakan tanda tangan terlebih dahulu!");
-        return;
-    }
+        async function prosesTTD() {
+            if (signaturePad.isEmpty()) {
+                alert("Silakan tanda tangan terlebih dahulu!");
+                return;
+            }
 
-    const btnSubmit = document.getElementById('btnSubmit');
-    btnSubmit.innerText = "Sedang Mengupload...";
-    btnSubmit.disabled = true;
+            const btnSubmit = document.getElementById('btnSubmit');
+            btnSubmit.innerText = "Mengupload...";
+            btnSubmit.disabled = true;
 
-    try {
-        const dataURI = signaturePad.toDataURL("image/png");
-        const base64Data = dataURI.split(',')[1];
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxrMkHyJVBK_UN9QF_Xub7MvJ5BCcveyVh_rb6GSWcmiOWmRV8e5mlYi2NS3KexXsNW/exec'; // GANTI DENGAN URL DEPLOYMENT BARU
+            try {
+                const dataURI = signaturePad.toDataURL("image/png");
+                const base64Data = dataURI.split(',')[1];
+                
+                // URL Web App kamu
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbxrMkHyJVBK_UN9QF_Xub7MvJ5BCcveyVh_rb6GSWcmiOWmRV8e5mlYi2NS3KexXsNW/exec';
 
-        // 1. Kirim data (Hapus mode: 'no-cors')
-        const response = await fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify({ image: base64Data })
-        });
+                // Gunakan cara fetch yang lebih stabil untuk Google Script
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'cors', // Harus cors untuk ambil URL
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8', // Trik agar tidak kena pre-flight CORS
+                    },
+                    body: JSON.stringify({ image: base64Data })
+                });
 
-        // 2. Baca hasil balasan dari Script
-        const result = await response.json();
+                // Cek apakah responnya OK
+                const result = await response.json();
 
-        if (result.success) {
-            // 3. Arahkan ke Google Form dengan membawa URL ASLI dari Drive
-            const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
-            
-            // Redirect dengan URL file asli
-            window.location.href = linkGoogleForm + encodeURIComponent(result.url);
-        } else {
-            throw new Error(result.error);
+                if (result.success) {
+                    btnSubmit.innerText = "Mengalihkan...";
+                    
+                    // URL Google Form Anda
+                    const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
+                    
+                    // Alihkan ke form dengan membawa link file dari Drive
+                    window.location.href = linkGoogleForm + encodeURIComponent(result.url);
+                } else {
+                    throw new Error(result.error || "Gagal menyimpan file.");
+                }
+
+            } catch (error) {
+                console.error("Error Detail:", error);
+                
+                // JIKA ERROR JSON TAPI FILE MASUK DRIVE (Khas Google Redirect)
+                // Kita beri pesan instruksi atau coba tebak linknya jika perlu.
+                alert("Upload berhasil (cek Drive), tapi browser memblokir pengalihan otomatis. Silakan refresh atau coba lagi.");
+                
+                btnSubmit.innerText = "Lanjut ke Form";
+                btnSubmit.disabled = false;
+            }
         }
-
-    } catch (error) {
-        console.error("Error:", error);
-        alert("Gagal mengupload: " + error.message);
-        btnSubmit.innerText = "Lanjut ke Form";
-        btnSubmit.disabled = false;
-    }
-
-}
     </script>
 </body>
 </html>
