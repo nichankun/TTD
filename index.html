@@ -69,45 +69,48 @@
             signaturePad.clear();
         }
 
-        async function prosesTTD() {
-            if (signaturePad.isEmpty()) {
-                alert("Silakan tanda tangan terlebih dahulu!");
-                return;
-            }
+    async function prosesTTD() {
+    if (signaturePad.isEmpty()) {
+        alert("Silakan tanda tangan terlebih dahulu!");
+        return;
+    }
 
-            const btnSubmit = document.getElementById('btnSubmit');
-            btnSubmit.innerText = "Mengupload ke Drive...";
-            btnSubmit.disabled = true;
+    const btnSubmit = document.getElementById('btnSubmit');
+    btnSubmit.innerText = "Sedang Mengupload...";
+    btnSubmit.disabled = true;
 
-            try {
-                const dataURI = signaturePad.toDataURL("image/png");
-                const base64Data = dataURI.split(',')[1];
+    try {
+        const dataURI = signaturePad.toDataURL("image/png");
+        const base64Data = dataURI.split(',')[1];
+        const scriptURL = 'URL_WEB_APP_ANDA'; // GANTI DENGAN URL DEPLOYMENT BARU
 
-                const scriptURL = 'https://script.google.com/macros/s/AKfycbxm3xF24cPzlX1MxKqplhhVv8pNEKu1OtvfqjlJ2MiFg-1kThGUOt9YG7zM-TfF97lhzw/exec'; 
+        // 1. Kirim data (Hapus mode: 'no-cors')
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ image: base64Data })
+        });
 
-                // Kirim data menggunakan mode no-cors untuk bypass blokiran browser
-                await fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'no-cors', // <--- INI BAGIAN YANG SAYA TAMBAHKAN KEMBALI
-                    headers: { 
-                        'Content-Type': 'text/plain' 
-                    },
-                    body: JSON.stringify({ image: base64Data })
-                });
+        // 2. Baca hasil balasan dari Script
+        const result = await response.json();
 
-                // Tunggu 3 detik agar Google Drive selesai memproses gambar, lalu pindah halaman
-                setTimeout(() => {
-                    const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
-                    window.location.href = linkGoogleForm + encodeURIComponent("File Tersimpan di Google Drive");
-                }, 3000);
-
-            } catch (error) {
-                console.error("Error Detail:", error);
-                alert("Gagal mengupload. Pastikan internet Anda stabil.");
-                btnSubmit.innerText = "Lanjut ke Form";
-                btnSubmit.disabled = false;
-            }
+        if (result.success) {
+            // 3. Arahkan ke Google Form dengan membawa URL ASLI dari Drive
+            const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
+            
+            // Redirect dengan URL file asli
+            window.location.href = linkGoogleForm + encodeURIComponent(result.url);
+        } else {
+            throw new Error(result.error);
         }
+
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Gagal mengupload: " + error.message);
+        btnSubmit.innerText = "Lanjut ke Form";
+        btnSubmit.disabled = false;
+    }
+
+}
     </script>
 </body>
 </html>
