@@ -25,7 +25,7 @@
 
     <div class="card">
         <h2>Tanda Tangan</h2>
-        <p>Silakan bubuhkan tanda tangan Anda di bawah ini, lalu klik tombol kirim.</p>
+        <p>Silakan tanda tangan di bawah ini untuk kehadiran.</p>
 
         <div class="canvas-container">
             <canvas id="canvas"></canvas>
@@ -44,13 +44,11 @@
         const statusDiv = document.getElementById('status');
         const btnSubmit = document.getElementById('btnSubmit');
         
-        // Inisialisasi Signature Pad
         const signaturePad = new SignaturePad(canvas, {
             penColor: "black",
             backgroundColor: "rgba(255, 255, 255, 0)"
         });
 
-        // Menangani ukuran canvas agar responsif
         function resizeCanvas() {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
             canvas.width = canvas.offsetWidth * ratio;
@@ -66,51 +64,52 @@
             statusDiv.innerText = "";
         }
 
-       async function prosesTTD() {
-    if (signaturePad.isEmpty()) {
-        alert("Silakan tanda tangan terlebih dahulu!");
-        return;
-    }
+        async function prosesTTD() {
+            if (signaturePad.isEmpty()) {
+                alert("Silakan tanda tangan terlebih dahulu!");
+                return;
+            }
 
-    const btnSubmit = document.getElementById('btnSubmit');
-    btnSubmit.innerText = "Mengirim TTD...";
-    btnSubmit.disabled = true;
+            btnSubmit.innerText = "Mengupload...";
+            btnSubmit.disabled = true;
+            statusDiv.innerText = "Sedang menyimpan tanda tangan ke Drive...";
 
-    try {
-        const dataURI = signaturePad.toDataURL("image/png");
-        const base64Data = dataURI.split(',')[1];
-        
-        // Ganti dengan URL Deployment terbaru Anda (/exec)
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwhIMbVkF-0DOv0nBZtaPRLjdC3jaEShwl5LBW7HelctwU1guagB8f7LvrgOiuqpd8y/exec';
+            try {
+                const dataURI = signaturePad.toDataURL("image/png");
+                const base64Data = dataURI.split(',')[1];
+                
+                // URL Deployment terbaru
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbwhIMbVkF-0DOv0nBZtaPRLjdC3jaEShwl5LBW7HelctwU1guagB8f7LvrgOiuqpd8y/exec';
 
-        // 1. Upload ke Drive
-        const response = await fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify({ image: base64Data })
-        });
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify({ image: base64Data })
+                });
 
-        const result = await response.json();
+                const result = await response.json();
 
-        if (result.success) {
-            // 2. Gabungkan Link Drive ke Google Form (Pre-filled)
-            const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform";
-            const entryID = "entry.2010947988"; // ID kolom TTD di Google Form Anda
-            
-            // Susun URL Lengkap
-            const finalUrl = `${baseUrl}?usp=pp_url&${entryID}=${encodeURIComponent(result.url)}`;
-            
-            // 3. Pindah ke Google Form
-            window.location.href = finalUrl;
-        } else {
-            alert("Gagal upload: " + result.error);
+                if (result.success) {
+                    statusDiv.innerText = "Berhasil! Mengalihkan ke Google Form...";
+                    
+                    // --- KONFIGURASI PRE-FILLED ---
+                    const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform";
+                    const entryID = "entry.2010947988"; // ID kolom TTD
+                    
+                    // Menggabungkan link TTD dari Drive ke URL Google Form
+                    const finalUrl = `${baseUrl}?usp=pp_url&${entryID}=${encodeURIComponent(result.url)}`;
+                    
+                    // Pindah ke halaman Google Form
+                    window.location.href = finalUrl;
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Terjadi kesalahan: " + e.message);
+                btnSubmit.innerText = "Coba Lagi";
+                btnSubmit.disabled = false;
+            }
         }
-    } catch (e) {
-        console.error(e);
-        // Jika masih error CORS, kita beri pesan manual
-        alert("Koneksi terganggu. Klik OK untuk lanjut mengisi form manual.");
-        window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform";
-    }
-}
     </script>
 </body>
 </html>
