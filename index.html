@@ -82,7 +82,7 @@
     try {
         const dataURI = signaturePad.toDataURL("image/png");
         const base64Data = dataURI.split(',')[1];
-        const scriptURL = 'URL_WEB_APP_ANDA'; // GANTI DENGAN URL DEPLOYMENT BARU
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxrMkHyJVBK_UN9QF_Xub7MvJ5BCcveyVh_rb6GSWcmiOWmRV8e5mlYi2NS3KexXsNW/exec'; // GANTI DENGAN URL DEPLOYMENT BARU
 
         // 1. Kirim data (Hapus mode: 'no-cors')
         const response = await fetch(scriptURL, {
