@@ -3,37 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Tanda Tangan Digital</title>
+    <title>Form Tanda Tangan Digital - Google Form</title>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <style>
         body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; background-color: #f4f4f4; }
         .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
-        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .canvas-container { border: 2px dashed #ccc; margin-bottom: 10px; position: relative; background-color: #fafafa; }
-        canvas { width: 100%; height: 200px; cursor: crosshair; }
+        .canvas-container { border: 2px dashed #ccc; margin-bottom: 15px; background-color: #fafafa; position: relative; }
+        canvas { width: 100%; height: 250px; cursor: crosshair; display: block; }
         .buttons { display: flex; gap: 10px; }
-        button { flex: 1; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        #clear { background-color: #ff4d4d; color: white; }
-        #submit { background-color: #4CAF50; color: white; }
-        button:disabled { background-color: #ccc; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        #clear { background-color: #e74c3c; color: white; }
+        #submit { background-color: #2ecc71; color: white; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        h3 { margin-top: 0; color: #333; text-align: center; }
+        p { font-size: 12px; color: #666; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h3>Form Absensi & TTD</h3>
-    <form id="myForm">
-        <label>Nama Lengkap:</label>
-        <input type="text" id="nama" name="nama" placeholder="Masukkan nama sesuai KTP" required>
-        
-        <label>Tanda Tangan:</label>
+    <h3>Input Tanda Tangan</h3>
+    <p>Silakan tanda tangan di dalam kotak di bawah ini:</p>
+    
+    <form id="signatureForm">
         <div class="canvas-container">
             <canvas id="signature-pad"></canvas>
         </div>
         
         <div class="buttons">
-            <button type="button" id="clear">Hapus TTD</button>
-            <button type="submit" id="submit">Kirim Sekarang</button>
+            <button type="button" id="clear">Hapus</button>
+            <button type="submit" id="submit">Kirim ke Google Form</button>
         </div>
     </form>
 </div>
@@ -41,11 +40,11 @@
 <script>
     const canvas = document.getElementById("signature-pad");
     const signaturePad = new SignaturePad(canvas, {
-        backgroundColor: 'rgba(255, 255, 255, 0)',
+        backgroundColor: 'rgb(255, 255, 255)',
         penColor: 'rgb(0, 0, 0)'
     });
 
-    // Fungsi menyesuaikan ukuran canvas agar responsif
+    // Menyesuaikan ukuran canvas agar tidak pecah
     function resizeCanvas() {
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         canvas.width = canvas.offsetWidth * ratio;
@@ -57,42 +56,42 @@
     window.onresize = resizeCanvas;
     resizeCanvas();
 
-    const form = document.getElementById("myForm");
+    const form = document.getElementById("signatureForm");
     const submitBtn = document.getElementById("submit");
 
     form.onsubmit = async (e) => {
         e.preventDefault();
         
         if (signaturePad.isEmpty()) {
-            return alert("Silakan tanda tangan terlebih dahulu pada kotak yang tersedia.");
+            return alert("Tanda tangan dulu ya!");
         }
 
         submitBtn.disabled = true;
         submitBtn.innerText = "Mengirim...";
 
-        const ttdData = signaturePad.toDataURL(); 
-        const nama = document.getElementById("nama").value;
+        const ttdData = signaturePad.toDataURL(); // Ambil gambar TTD
+        const namaUser = document.getElementById("nama").value; // Ambil nama dari input
         
-        // URL Web App dari Google Apps Script Anda
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbx0OzZ541gcDFuOGGzs7BuZ2kn5Di3WrAV26Jsa0zDGv5UvHp5yGu2tzR4r60SCbYUW/exec";
+        // URL Web App hasil Deploy Apps Script Anda
+        const webAppUrl = "URL_WEB_APP_ANDA_DI_SINI"; 
 
         const formData = new URLSearchParams();
-        formData.append("nama", nama);
+        // NAMA KEY HARUS SAMA DENGAN e.parameter DI APPS SCRIPT
+        formData.append("nama", namaUser); 
         formData.append("ttd", ttdData);
 
         try {
-            // Menggunakan mode 'no-cors' jika hanya ingin kirim data tanpa butuh response balik yang kompleks
             await fetch(webAppUrl, {
                 method: "POST",
                 body: formData,
-                mode: "no-cors"
+                mode: "no-cors" 
             });
 
-            alert("Terima kasih! Data dan tanda tangan Anda telah tersimpan di Spreadsheet.");
-            form.reset();
+            alert("Berhasil! Tanda tangan tersimpan di Drive & Spreadsheet.");
             signaturePad.clear();
+            form.reset();
         } catch (err) {
-            alert("Terjadi kesalahan saat mengirim data.");
+            alert("Gagal kirim data.");
             console.error(err);
         } finally {
             submitBtn.disabled = false;
