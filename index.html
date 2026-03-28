@@ -66,59 +66,51 @@
             statusDiv.innerText = "";
         }
 
-        async function prosesTTD() {
-            if (signaturePad.isEmpty()) {
-                alert("Tanda tangan tidak boleh kosong!");
-                return;
-            }
+       async function prosesTTD() {
+    if (signaturePad.isEmpty()) {
+        alert("Silakan tanda tangan terlebih dahulu!");
+        return;
+    }
 
-            btnSubmit.disabled = true;
-            btnSubmit.innerText = "Mengirim...";
-            statusDiv.innerText = "Sedang mengupload file ke Google Drive...";
+    const btnSubmit = document.getElementById('btnSubmit');
+    btnSubmit.innerText = "Mengirim TTD...";
+    btnSubmit.disabled = true;
 
-            try {
-                const dataURI = signaturePad.toDataURL("image/png");
-                const base64Data = dataURI.split(',')[1];
-                
-                // URL Web App Anda
-                const scriptURL = 'https://script.google.com/macros/s/AKfycbwmYufE84dZyA2M4UhcHk_hSWGmb1mDdlbg56sqcZWr-5iie8VxomfdwwxsXAxOj1eS/exec';
+    try {
+        const dataURI = signaturePad.toDataURL("image/png");
+        const base64Data = dataURI.split(',')[1];
+        
+        // Ganti dengan URL Deployment terbaru Anda (/exec)
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwhIMbVkF-0DOv0nBZtaPRLjdC3jaEShwl5LBW7HelctwU1guagB8f7LvrgOiuqpd8y/exec';
 
-                // Trik Bypass CORS: Mengirim sebagai text/plain
-                const response = await fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'cors', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ image: base64Data })
-                });
+        // 1. Upload ke Drive
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ image: base64Data })
+        });
 
-                const result = await response.json();
+        const result = await response.json();
 
-                if (result.success) {
-                    statusDiv.style.color = "green";
-                    statusDiv.innerText = "Berhasil! Mengalihkan ke Form...";
-                    
-                    // URL Google Form Anda
-                    const linkGoogleForm = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform?usp=pp_url&entry.2010947988=";
-                    
-                    // Alihkan dengan membawa URL file Drive
-                    window.location.href = linkGoogleForm + encodeURIComponent(result.url);
-                } else {
-                    throw new Error(result.error);
-                }
-
-            } catch (error) {
-                console.error("Detail Error:", error);
-                statusDiv.style.color = "red";
-                statusDiv.innerText = "Gagal: " + error.message;
-                btnSubmit.disabled = false;
-                btnSubmit.innerText = "Coba Lagi";
-                
-                // Jika file masuk Drive tapi tetap error di browser, beri tombol manual
-                if(confirm("Upload mungkin berhasil namun koneksi terputus. Coba alihkan ke Form secara manual?")) {
-                    window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform";
-                }
-            }
+        if (result.success) {
+            // 2. Gabungkan Link Drive ke Google Form (Pre-filled)
+            const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform";
+            const entryID = "entry.2010947988"; // ID kolom TTD di Google Form Anda
+            
+            // Susun URL Lengkap
+            const finalUrl = `${baseUrl}?usp=pp_url&${entryID}=${encodeURIComponent(result.url)}`;
+            
+            // 3. Pindah ke Google Form
+            window.location.href = finalUrl;
+        } else {
+            alert("Gagal upload: " + result.error);
         }
+    } catch (e) {
+        console.error(e);
+        // Jika masih error CORS, kita beri pesan manual
+        alert("Koneksi terganggu. Klik OK untuk lanjut mengisi form manual.");
+        window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSczR-zF0K9C_f_eVO1QHZFo4pJtHtgCgL3Dqk1Sm_4xWqc_Lg/viewform";
+    }
+}
     </script>
 </body>
 </html>
